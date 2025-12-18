@@ -36,6 +36,18 @@ def add_html_to_doc(doc, html):
                 add_inline_runs(p, li)
 
 
+
+    for element in soup.contents:
+        if element.name == "p":
+            p = doc.add_paragraph()
+            add_inline_runs(p, element)
+
+        elif element.name == "ul":
+            for li in element.find_all("li", recursive=False):
+                p = doc.add_paragraph(style="List Bullet")
+                add_inline_runs(p, li)
+
+
 def add_inline_runs(paragraph, element):
     """Safely convert inline HTML to Word runs without duplication."""
     for child in element.children:
@@ -75,9 +87,7 @@ def excel_to_word(excel_file):
         # ID as heading / separator
         id_para = doc.add_paragraph(str(product_id))
         id_para.runs[0].bold = True
-
-        # Required 20000 separator
-        doc.add_paragraph("20000")
+        # Product ID acts as the separator between descriptions
 
         if html:
             add_html_to_doc(doc, html)
