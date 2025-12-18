@@ -13,16 +13,7 @@ from bs4 import BeautifulSoup
 # ============================
 
 def add_html_to_doc(doc, html):
-    """Convert a limited HTML subset back into Word paragraphs.
-    If no HTML tags are present, treat content as plain text.
-    """
-    # Plain text fallback (no HTML tags)
-    if "<" not in str(html) or ">" not in str(html):
-        for line in str(html).split("\n"):
-            if line.strip():
-                doc.add_paragraph(line.strip())
-        return
-
+    """Convert a limited HTML subset back into Word paragraphs."""
     soup = BeautifulSoup(html, "html.parser")
 
     for element in soup.contents:
@@ -34,6 +25,7 @@ def add_html_to_doc(doc, html):
             for li in element.find_all("li", recursive=False):
                 p = doc.add_paragraph(style="List Bullet")
                 add_inline_runs(p, li)
+
 
 
     for element in soup.contents:
@@ -48,15 +40,23 @@ def add_html_to_doc(doc, html):
 
 
 def add_inline_runs(paragraph, element):
-    """Handle <b>, <strong>, and plain text."""
-    for node in element.descendants:
-        if node.name in ("b", "strong"):
-            run = paragraph.add_run(node.get_text())
+    """Safely convert inline HTML to Word runs without duplication."""
+    for child in element.children:
+        # Bold / strong text
+        if getattr(child, "name", None) in ("b", "strong"):
+            run = paragraph.add_run(child.get_text())
             run.bold = True
-        elif node.name is None:
-            text = node.strip()
+
+        # Plain text node
+        elif child.name is None:
+            text = child.strip()
             if text:
                 paragraph.add_run(text)
+
+        # Any other nested tag (future-proofing)
+        else:
+            add_inline_runs(paragraph, child)
+
 
 
 # ============================
