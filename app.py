@@ -13,20 +13,17 @@ from bs4 import BeautifulSoup
 # ============================
 
 def add_html_to_doc(doc, html):
-    """Convert a limited HTML subset back into Word paragraphs."""
+    """Convert a limited HTML subset back into Word paragraphs.
+    If HTML contains no tags, treat it as plain text.
+    """
+
+    # If the cell is plain text (no HTML tags), just write it
+    if "<" not in str(html) or ">" not in str(html):
+        p = doc.add_paragraph()
+        p.add_run(str(html))
+        return
+
     soup = BeautifulSoup(html, "html.parser")
-
-    for element in soup.contents:
-        if element.name == "p":
-            p = doc.add_paragraph()
-            add_inline_runs(p, element)
-
-        elif element.name == "ul":
-            for li in element.find_all("li", recursive=False):
-                p = doc.add_paragraph(style="List Bullet")
-                add_inline_runs(p, li)
-
-
 
     for element in soup.contents:
         if element.name == "p":
@@ -72,13 +69,18 @@ def excel_to_word(excel_file):
     # Skip header row
     for row in ws.iter_rows(min_row=2, values_only=True):
         product_id, html = row
-        if not product_id or not html:
+        if not product_id:
             continue
 
         # ID as heading / separator
-        doc.add_paragraph(str(product_id)).runs[0].bold = True
+        id_para = doc.add_paragraph(str(product_id))
+        id_para.runs[0].bold = True
 
-        add_html_to_doc(doc, html)
+        # Required 20000 separator
+        doc.add_paragraph("20000")
+
+        if html:
+            add_html_to_doc(doc, html)
 
         doc.add_page_break()
 
