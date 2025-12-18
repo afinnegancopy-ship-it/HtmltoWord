@@ -1,0 +1,5 @@
+streamlit
+python-docx
+openpyxl
+beautifulsoup4
+lxml
