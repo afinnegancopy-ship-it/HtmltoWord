@@ -17,7 +17,7 @@ def add_html_to_doc(doc, html):
     If HTML contains no tags, treat it as plain text.
     """
 
-    # If the cell is plain text (no HTML tags), just write it
+    # Plain text cell (no HTML tags)
     if "<" not in str(html) or ">" not in str(html):
         p = doc.add_paragraph()
         p.add_run(str(html))
@@ -25,6 +25,7 @@ def add_html_to_doc(doc, html):
 
     soup = BeautifulSoup(html, "html.parser")
 
+    # Process elements ONCE (no duplication)
     for element in soup.contents:
         if element.name == "p":
             p = doc.add_paragraph()
@@ -35,17 +36,6 @@ def add_html_to_doc(doc, html):
                 p = doc.add_paragraph(style="List Bullet")
                 add_inline_runs(p, li)
 
-
-
-    for element in soup.contents:
-        if element.name == "p":
-            p = doc.add_paragraph()
-            add_inline_runs(p, element)
-
-        elif element.name == "ul":
-            for li in element.find_all("li", recursive=False):
-                p = doc.add_paragraph(style="List Bullet")
-                add_inline_runs(p, li)
 
 
 def add_inline_runs(paragraph, element):
